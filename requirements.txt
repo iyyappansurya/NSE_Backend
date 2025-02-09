@@ -1,7 +1,7 @@
 Flask==2.2.3
 numpy
 pandas
-nsepython==1
+nsepython
 nsepy
 yfinance
 gunicorn==20.1.0
