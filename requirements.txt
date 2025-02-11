@@ -4,6 +4,6 @@ pandas
 nsepython
 nsepy
 yfinance
-gunicorn==20.1.0
+gunicorn
 werkzeug==2.3.0
-Flask-Cors
+flask-cors
