@@ -2,7 +2,7 @@ import logging
 from flask import Flask, request, jsonify
 from datetime import datetime
 import pandas as pd
-from nsepython import equity_history
+from nsepythonserver import equity_history
 from nsepy import get_history
 import yfinance as yf
 from io import BytesIO
