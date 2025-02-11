@@ -8,7 +8,7 @@ from io import BytesIO
 import os
 from flask_cors import CORS
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://nse-historical.vercel.app"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 # Function to fetch NSE Spot data
 def get_nse_spot(ticker, start_date, end_date):
     start_str = start_date.strftime("%d-%m-%Y")
