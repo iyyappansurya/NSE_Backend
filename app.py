@@ -93,8 +93,8 @@ def get_data():
 
     try:
         ticker = data_request['ticker']
-        start_date = parser.parse(data_request['start_date']).strftime("%d-%m-%Y")
-        end_date = parser.parse(data_request['end_date']).strftime("%d-%m-%Y")
+        start_date = parser.parse(data_request['start_date'])
+        end_date = parser.parse(data_request['end_date'])
         expiry_date = data_request.get('expiry_date', None)
 
         if data_request['exchange'] == 'NSE':
