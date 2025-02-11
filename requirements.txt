@@ -7,3 +7,4 @@ yfinance
 gunicorn
 werkzeug==2.3.0
 flask-cors
+python-dateutil
