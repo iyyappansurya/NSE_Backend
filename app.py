@@ -60,31 +60,49 @@ def get_nse_futures(ticker, start_date, end_date, expiry_date):
 
 # Function to fetch MCX data
 def fetch_mcx_data(symbol, start_date, end_date, frequency='1d'):
-    logging.info(f"Fetching MCX data for {symbol} from {start_date} to {end_date}, frequency: {frequency}")
+    # Fetch data
+    data = yf.download(symbol, start=start_date, end=end_date, interval=frequency)
+    if isinstance(data.columns, pd.MultiIndex):
+        # Flatten the MultiIndex columns (select the 'GOLD' level from the MultiIndex)
+        data.columns = data.columns.get_level_values(0)  # Use the first level of MultiIndex
+        logging.info("Flattened columns:", data.columns)
     
-    try:
-        data = yf.download(symbol, start=start_date, end=end_date, interval=frequency)
-        data.reset_index(inplace=True)
-        data['Date'] = pd.to_datetime(data['Date'])
-        
-        required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-        missing_columns = [col for col in required_columns if col not in data.columns]
-        if missing_columns:
-            raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
-        
-        data = data.resample('W-Mon', on='Date').agg({
-            'Open': 'first',
-            'High': 'max',
-            'Low': 'min',
-            'Close': 'last',
-            'Volume': 'sum',
-        }).reset_index()
-        
-        data['Date'] = data['Date'].dt.strftime('%d-%m-%Y')
-        return data
-    except Exception as e:
-        logging.error(f"Error fetching MCX data: {e}")
-        raise
+    # Check if data is fetched correctly
+    logging.info("Columns in the fetched data:", data.columns)
+    logging.info("First few rows of the fetched data:")
+    logging.info(data.head())
+    
+    if data.empty:
+        raise ValueError(f"No data fetched for symbol: {symbol}. Please check the symbol or date range.")
+    
+    # Reset index so that Date is a column and not an index
+    data.reset_index(inplace=True)
+
+    # Ensure Date is in datetime format
+    data['Date'] = pd.to_datetime(data['Date'])
+    
+    # Check if the required columns are present
+    required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+    missing_columns = [col for col in required_columns if col not in data.columns]
+    
+    if missing_columns:
+        raise KeyError(f"Missing required columns: {', '.join(missing_columns)}")
+    
+    # Resample to weekly data (Monday as the start of the week)
+    data = data.resample('W-Mon', on='Date').agg({
+        'Open': 'first',
+        'High': 'max',
+        'Low': 'min',
+        'Close': 'last',
+        'Volume': 'sum',
+        # Adding Open Interest if it exists
+        **({'Open Interest': 'last'} if 'Open Interest' in data.columns else {})
+    }).reset_index()
+
+    # Format Date to 'DD-MM-YYYY'
+    data['Date'] = data['Date'].dt.strftime('%d-%m-%Y')
+
+    return data
 
 @app.route('/get-data/', methods=['POST'])
 def get_data():
@@ -96,7 +114,8 @@ def get_data():
         start_date = parser.parse(data_request['start_date'])
         end_date = parser.parse(data_request['end_date'])
         expiry_date = data_request.get('expiry_date', None)
-
+        if expiry_date:
+            expiry_date = parser.parse(expiry_date)
         if data_request['exchange'] == 'NSE':
             if '-FUT' in ticker:
                 data = get_nse_futures(ticker.replace('-FUT', ''), start_date, end_date, expiry_date)
