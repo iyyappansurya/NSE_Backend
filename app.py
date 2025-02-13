@@ -103,7 +103,9 @@ def fetch_mcx_data(symbol, start_date, end_date, frequency='1d'):
     data['Date'] = data['Date'].dt.strftime('%d-%m-%Y')
 
     return data
-
+@app.route('/ping',methods=['GET','POST'])
+def ping():
+    return {"status": "alive"}
 @app.route('/get-data/', methods=['POST'])
 def get_data():
     data_request = request.get_json()
